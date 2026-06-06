@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\FileManagerController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SecurityLoginController;
 use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\TunnelManagerController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use App\Http\Controllers\Admin\WebsiteController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
@@ -88,6 +89,18 @@ Route::middleware(['auth', '2fa'])->prefix('admin')->name('admin.')->group(funct
 
     Route::post('/deploy/{project}/run', [DeployController::class, 'deploy'])
     ->name('deploy.run');
+
+    Route::get('/tunnels', [TunnelManagerController::class, 'index'])
+    ->name('tunnels.index');
+
+    Route::post('/tunnels', [TunnelManagerController::class, 'store'])
+        ->name('tunnels.store');
+
+     Route::post('/tunnels/test', [TunnelManagerController::class, 'test'])
+    ->name('tunnels.test');
+
+    Route::post('/tunnels/hostnames', [TunnelManagerController::class, 'addHostname'])
+    ->name('tunnels.hostnames.store');
 });
 
 Route::middleware('auth')->group(function () {

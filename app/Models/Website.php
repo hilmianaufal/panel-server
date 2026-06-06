@@ -13,5 +13,11 @@ class Website extends Model
         'php_version',
         'web_server',
         'status',
+        'auto_tunnel',
+        'tunnel_status',
     ];
+
+    protected $casts = [
+    'auto_tunnel' => 'boolean',
+];
 }

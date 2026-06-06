@@ -41,7 +41,18 @@
                 <option value="nginx">Nginx</option>
                 <option value="apache">Apache</option>
             </select>
+                <label class="flex items-center gap-3 rounded-2xl bg-slate-950/60 border border-white/10 px-4 py-3">
+                    <input type="checkbox" name="auto_tunnel" value="1"
+                        class="rounded border-white/10 bg-slate-950 text-blue-600 focus:ring-blue-500"
+                        checked>
 
+                    <div>
+                        <p class="font-semibold">Auto Create Cloudflare Hostname</p>
+                        <p class="text-xs text-slate-500">
+                            Otomatis tambah domain ke Cloudflare Tunnel.
+                        </p>
+                    </div>
+                </label>
             <button class="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 px-4 py-3 font-semibold flex items-center justify-center gap-2">
                 <i data-lucide="plus-circle" class="w-5 h-5"></i>
                 Tambah Website
@@ -89,8 +100,22 @@
                         <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-sm">
                             {{ ucfirst($website->status) }}
                         </span>
-
-                        <a href="http://{{ $website->domain }}" target="_blank"
+                            @if ($website->auto_tunnel)
+                                @if ($website->tunnel_status === 'active')
+                                    <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs">
+                                        Tunnel Active
+                                    </span>
+                                @elseif ($website->tunnel_status === 'failed')
+                                    <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs">
+                                        Tunnel Failed
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-xs">
+                                        Tunnel Pending
+                                    </span>
+                                @endif
+                            @endif
+                                                    <a href="http://{{ $website->domain }}" target="_blank"
                            class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm">
                             Open
                         </a>
