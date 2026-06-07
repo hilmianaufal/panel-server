@@ -154,6 +154,21 @@
                         <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs">
                             Active
                         </span>
+                        <form method="POST"
+                            action="{{ route('admin.tunnels.hostnames.delete') }}">
+                            @csrf
+                            @method('DELETE')
+
+                            <input type="hidden"
+                                name="hostname"
+                                value="{{ $rule['hostname'] }}">
+
+                            <button
+                                onclick="return confirm('Hapus hostname ini?')"
+                                class="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white">
+                                Hapus
+                            </button>
+                        </form>
                     </div>
                 @endif
             @empty

@@ -101,6 +101,11 @@ Route::middleware(['auth', '2fa'])->prefix('admin')->name('admin.')->group(funct
 
     Route::post('/tunnels/hostnames', [TunnelManagerController::class, 'addHostname'])
     ->name('tunnels.hostnames.store');
+
+Route::delete('/tunnels/hostnames', [TunnelManagerController::class, 'deleteHostname'])
+    ->name('tunnels.hostnames.delete');
+
+
 });
 
 Route::middleware('auth')->group(function () {

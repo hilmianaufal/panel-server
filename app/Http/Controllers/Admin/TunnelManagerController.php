@@ -217,4 +217,42 @@ class TunnelManagerController extends Controller
         return Http::withToken($setting->api_token)
             ->acceptJson();
     }
+
+    public function deleteHostname(Request $request)
+{
+    $request->validate([
+        'hostname' => ['required'],
+    ]);
+
+    $setting = CloudflareSetting::firstOrFail();
+
+    $url = "https://api.cloudflare.com/client/v4/accounts/{$setting->account_id}/cfd_tunnel/{$setting->tunnel_id}/configurations";
+
+    $response = $this->cloudflare($setting)->get($url);
+
+    if (! $response->successful()) {
+        return back()->with('error', 'Gagal mengambil konfigurasi tunnel.');
+    }
+
+    $config = data_get($response->json(), 'result.config', []);
+
+    $ingress = collect($config['ingress'] ?? [])
+        ->reject(fn ($rule) =>
+            ($rule['hostname'] ?? null) === $request->hostname
+        )
+        ->values()
+        ->toArray();
+
+    $update = $this->cloudflare($setting)->put($url, [
+        'config' => [
+            'ingress' => $ingress,
+        ],
+    ]);
+
+    if (! $update->successful()) {
+        return back()->with('error', 'Gagal menghapus hostname.');
+    }
+
+    return back()->with('success', 'Hostname berhasil dihapus.');
+}
 }
