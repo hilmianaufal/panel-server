@@ -53,6 +53,15 @@
             </div>
 
             <div>
+                <label class="block mb-2 text-sm text-slate-400">Zone ID</label>
+                <input name="zone_id"
+                    value="{{ old('zone_id', $setting->zone_id ?? '') }}"
+                    placeholder="Zone ID dari Cloudflare domain hilmidev.my.id"
+                    class="w-full rounded-2xl bg-slate-950 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+
+            <div>
                 <label class="block mb-2 text-sm text-slate-400">Account ID</label>
                 <input name="account_id"
                     value="{{ old('account_id', $setting->account_id ?? '') }}"
@@ -117,10 +126,7 @@
                 <h3 class="text-2xl font-bold">Tunnel Hostnames</h3>
                 <p class="text-slate-400 text-sm">Daftar ingress hostname dari Cloudflare Tunnel.</p>
             </div>
-            <input name="zone_id"
-                value="{{ old('zone_id', $setting->zone_id ?? '') }}"
-                placeholder="Zone ID"
-                class="w-full rounded-2xl bg-slate-950 border border-white/10 px-4 py-3">
+           
             @if($apiStatus === 'connected')
                 <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-sm">Connected</span>
             @elseif($apiStatus === 'failed')
