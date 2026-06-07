@@ -41,7 +41,7 @@
                 </div>
 
                 <div>
-                    <h1 class="text-xl font-bold tracking-tight">NexaPanel</h1>
+                    <h1 class="text-xl font-bold tracking-tight">HilmiDev Panel</h1>
                     <p class="text-xs text-slate-400">Private Server Control</p>
                 </div>
             </div>
