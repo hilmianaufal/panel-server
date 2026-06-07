@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Process;
 
 class DatabaseController extends Controller
 {
@@ -32,7 +33,7 @@ class DatabaseController extends Controller
             'database_name' => ['required', 'string', 'max:64', 'regex:/^[a-zA-Z0-9_]+$/'],
         ]);
 
-        DB::statement('CREATE DATABASE `' . $validated['database_name'] . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+        DB::statement('CREATE DATABASE `' . $validated['database_name'] . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');
         activity()
             ->causedBy(auth()->user())
             ->withProperties([

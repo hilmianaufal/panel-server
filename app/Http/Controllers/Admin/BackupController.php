@@ -78,7 +78,7 @@ class BackupController extends Controller
 
         $database = $validated['database_name'];
 
-        DB::statement("CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        DB::statement("CREATE DATABASE IF NOT EXISTS `{$database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
 
         $dbUser = config('database.connections.mysql.username');
         $dbPass = config('database.connections.mysql.password');
