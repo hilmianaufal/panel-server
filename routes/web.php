@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\FileManagerController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SecurityLoginController;
 use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\SslController;
 use App\Http\Controllers\Admin\TunnelManagerController;
 use App\Http\Controllers\Admin\TwoFactorController;
 use App\Http\Controllers\Admin\WebsiteController;
@@ -104,6 +105,13 @@ Route::middleware(['auth', '2fa'])->prefix('admin')->name('admin.')->group(funct
 
 Route::delete('/tunnels/hostnames', [TunnelManagerController::class, 'deleteHostname'])
     ->name('tunnels.hostnames.delete');
+    Route::get('/ssl', [SslController::class, 'index'])->name('ssl.index');
+
+Route::post('/ssl/{website}/generate', [SslController::class, 'generate'])
+    ->name('ssl.generate');
+
+Route::post('/ssl/renew', [SslController::class, 'renew'])
+    ->name('ssl.renew');
 
 
 });

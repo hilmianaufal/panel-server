@@ -94,7 +94,11 @@
                 <i data-lucide="activity" class="w-5 h-5"></i>
                 <span>Services</span>
             </a>
-
+                <a href="{{ route('admin.ssl.index') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('admin.ssl.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    <span>SSL Manager</span>
+                </a>
             <a href="{{ route('admin.deploy.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('admin.deploy.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
                 <i data-lucide="rocket" class="w-5 h-5"></i>
                 <span>Deploy Manager</span>
@@ -116,13 +120,6 @@
             </a>
         </nav>
 
-        <div class="p-5">
-            <div class="rounded-3xl bg-gradient-to-br from-blue-600 to-violet-700 p-5 shadow-xl">
-                <i data-lucide="sparkles" class="w-6 h-6 mb-3"></i>
-                <p class="font-semibold">Server Premium Mode</p>
-                <p class="text-sm text-blue-100 mt-1">Monitoring & automation aktif.</p>
-            </div>
-        </div>
     </aside>
 
     {{-- Main --}}
