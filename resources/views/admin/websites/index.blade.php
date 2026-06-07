@@ -30,8 +30,18 @@
             <input name="domain" placeholder="contoh: app.local atau domain.com"
                 class="w-full rounded-2xl bg-slate-950/70 border border-white/10 px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none">
 
-            <input name="root_path" placeholder="/var/www/app/public"
-                class="w-full rounded-2xl bg-slate-950/70 border border-white/10 px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none">
+           <div>
+                <label class="block text-sm text-slate-400 mb-2">Project Folder</label>
+
+                <input name="project_folder"
+                    value="{{ old('project_folder') }}"
+                    placeholder="contoh: desa-app"
+                    class="w-full rounded-2xl bg-slate-950/70 border border-white/10 px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none">
+
+                <p class="text-xs text-slate-500 mt-2">
+                    Otomatis menjadi: /var/www/projects/nama-folder/public
+                </p>
+            </div>
 
             <input name="php_version" placeholder="php8.2-fpm"
                 class="w-full rounded-2xl bg-slate-950/70 border border-white/10 px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none">
