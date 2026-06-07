@@ -11,6 +11,7 @@ class CloudflareSetting extends Model
         'tunnel_id',
         'api_token',
         'tunnel_name',
+        'zone_id',
 
     ];
 }

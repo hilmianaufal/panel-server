@@ -117,7 +117,10 @@
                 <h3 class="text-2xl font-bold">Tunnel Hostnames</h3>
                 <p class="text-slate-400 text-sm">Daftar ingress hostname dari Cloudflare Tunnel.</p>
             </div>
-
+            <input name="zone_id"
+                value="{{ old('zone_id', $setting->zone_id ?? '') }}"
+                placeholder="Zone ID"
+                class="w-full rounded-2xl bg-slate-950 border border-white/10 px-4 py-3">
             @if($apiStatus === 'connected')
                 <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-sm">Connected</span>
             @elseif($apiStatus === 'failed')
