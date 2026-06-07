@@ -64,7 +64,7 @@ class TunnelManagerController extends Controller
             ->acceptJson();
     }
 
-    public function addHostname(Request $request)
+public function addHostname(Request $request)
 {
     $validated = $request->validate([
         'hostname' => ['required', 'string', 'max:255'],
@@ -82,10 +82,17 @@ class TunnelManagerController extends Controller
     }
 
     $config = data_get($response->json(), 'result.config', []);
-    $ingress = $config['ingress'] ?? [];
+    $oldIngress = $config['ingress'] ?? [];
 
-    $ingress = collect($ingress)
-        ->reject(fn ($rule) => ! isset($rule['hostname']))
+    $ingress = collect($oldIngress)
+        ->filter(fn ($rule) => isset($rule['hostname']) && isset($rule['service']))
+        ->reject(fn ($rule) => $rule['hostname'] === $validated['hostname'])
+        ->map(function ($rule) {
+            return [
+                'hostname' => $rule['hostname'],
+                'service' => $rule['service'],
+            ];
+        })
         ->values()
         ->toArray();
 
