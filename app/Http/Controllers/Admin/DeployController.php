@@ -65,12 +65,14 @@ class DeployController extends Controller
 
         if (! is_dir($projectPath)) {
             $commands[] = "sudo mkdir -p {$parentPath}";
-            $commands[] = "sudo chown -R www-data:www-data {$parentPath}";
+            $commands[] = "sudo chown -R hilmidev:www-data {$parentPath}";
             $commands[] = "git clone {$project->repository} {$projectPath}";
         } else {
             $commands[] = "cd {$projectPath} && git pull origin {$project->branch}";
         }
 
+        $commands[] = "sudo chown -R hilmidev:www-data {$projectPath}";
+        $commands[] = "sudo chmod -R 775 {$projectPath}";
         $commands[] = "cd {$projectPath} && composer install --no-dev --optimize-autoloader";
         $commands[] = "cd {$projectPath} && php artisan migrate --force";
         $commands[] = "cd {$projectPath} && php artisan optimize";
