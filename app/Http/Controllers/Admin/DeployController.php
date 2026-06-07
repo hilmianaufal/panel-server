@@ -53,51 +53,59 @@ class DeployController extends Controller
     }
 
     public function deploy(DeployProject $project): RedirectResponse
-{
-    if (PHP_OS_FAMILY !== 'Linux') {
-        return back()->with('error', 'Deploy hanya bisa dijalankan di Ubuntu/Linux Server.');
-    }
-
-    if (! is_dir($project->project_path)) {
-        return back()->with('error', 'Project path tidak ditemukan: ' . $project->project_path);
-    }
-
-    $commands = [
-        "cd {$project->project_path} && git pull origin {$project->branch}",
-        "cd {$project->project_path} && composer install --no-dev --optimize-autoloader",
-        "cd {$project->project_path} && php artisan migrate --force",
-        "cd {$project->project_path} && php artisan optimize",
-    ];
-
-    $logs = [];
-
-    foreach ($commands as $command) {
-        $process = Process::fromShellCommandline($command);
-        $process->setTimeout(300);
-        $process->run();
-
-        $logs[] = '$ ' . $command;
-        $logs[] = $process->getOutput();
-        $logs[] = $process->getErrorOutput();
-
-        if (! $process->isSuccessful()) {
-            return back()->with('error', implode("\n", $logs));
+    {
+        if (PHP_OS_FAMILY !== 'Linux') {
+            return back()->with('error', 'Deploy hanya bisa dijalankan di Ubuntu/Linux Server.');
         }
+
+        $projectPath = rtrim($project->project_path, '/');
+        $parentPath = dirname($projectPath);
+
+        $commands = [];
+
+        if (! is_dir($projectPath)) {
+            $commands[] = "sudo mkdir -p {$parentPath}";
+            $commands[] = "sudo chown -R www-data:www-data {$parentPath}";
+            $commands[] = "git clone {$project->repository} {$projectPath}";
+        } else {
+            $commands[] = "cd {$projectPath} && git pull origin {$project->branch}";
+        }
+
+        $commands[] = "cd {$projectPath} && composer install --no-dev --optimize-autoloader";
+        $commands[] = "cd {$projectPath} && php artisan migrate --force";
+        $commands[] = "cd {$projectPath} && php artisan optimize";
+
+        $logs = [];
+
+        foreach ($commands as $command) {
+            $process = Process::fromShellCommandline($command);
+            $process->setTimeout(300);
+            $process->run();
+
+            $logs[] = '$ ' . $command;
+            $logs[] = $process->getOutput();
+            $logs[] = $process->getErrorOutput();
+
+            if (! $process->isSuccessful()) {
+                return back()->with('error', implode("\n", $logs));
+            }
+        }
+
+        $project->update([
+            'last_deployed_at' => now(),
+        ]);
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($project)
+            ->withProperties([
+                'project' => $project->name,
+                'repository' => $project->repository,
+                'branch' => $project->branch,
+                'path' => $projectPath,
+            ])
+            ->log('Project dideploy');
+
+        return back()->with('success', "Deploy berhasil.\n\n" . implode("\n", $logs));
     }
-
-    $project->update([
-        'last_deployed_at' => now(),
-    ]);
-
-    activity()
-        ->causedBy(auth()->user())
-        ->performedOn($project)
-        ->withProperties([
-            'project' => $project->name,
-            'branch' => $project->branch,
-        ])
-        ->log('Project dideploy');
-
-    return back()->with('success', "Deploy berhasil.\n\n" . implode("\n", $logs));
-}
 }
