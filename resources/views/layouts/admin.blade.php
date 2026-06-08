@@ -86,6 +86,11 @@
                 <i data-lucide="database-zap" class="w-5 h-5"></i>
                 <span>phpMyAdmin</span>
             </a>
+            <a href="{{ route('admin.notifications.index') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('admin.notifications.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
+                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                    <span>Notifications</span>
+                </a>
             <a href="{{ route('admin.backups.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-2xl {{ request()->routeIs('admin.backups.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-slate-300 hover:bg-white/10 hover:text-white' }}">
                 <i data-lucide="archive-restore" class="w-5 h-5"></i>
                 <span>Backup</span>

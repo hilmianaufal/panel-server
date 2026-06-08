@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DatabaseController;
 use App\Http\Controllers\Admin\DeployController;
 use App\Http\Controllers\Admin\FileManagerController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SecurityLoginController;
 use App\Http\Controllers\Admin\ServiceController;
@@ -117,6 +118,12 @@ Route::post('/websites/{website}/tools/run', [WebsiteController::class, 'runTool
 
 Route::get('/websites/{website}/analytics', [WebsiteController::class, 'analytics'])
     ->name('websites.analytics');
+
+Route::get('/notifications', [NotificationController::class, 'index'])
+    ->name('notifications.index');
+
+Route::post('/notifications/test', [NotificationController::class, 'test'])
+    ->name('notifications.test');
 
 
 });
