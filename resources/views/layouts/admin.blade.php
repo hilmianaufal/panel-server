@@ -62,6 +62,10 @@
                 <i data-lucide="globe-2" class="w-5 h-5"></i>
                 <span>Websites</span>
             </a>
+            <a href="{{ route('admin.websites.analytics', $website) }}"
+            class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm">
+                Analytics
+            </a>
                 <a href="{{ route('admin.tunnels.index') }}"
                 class="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-300 hover:bg-white/10">
 

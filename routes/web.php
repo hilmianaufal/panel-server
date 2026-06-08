@@ -112,6 +112,11 @@ Route::post('/ssl/{website}/generate', [SslController::class, 'generate'])
 
 Route::post('/ssl/renew', [SslController::class, 'renew'])
     ->name('ssl.renew');
+Route::post('/websites/{website}/tools/run', [WebsiteController::class, 'runTool'])
+    ->name('websites.tools.run');
+
+Route::get('/websites/{website}/analytics', [WebsiteController::class, 'analytics'])
+    ->name('websites.analytics');
 
 
 });

@@ -323,4 +323,83 @@ NGINX;
 
         return true;
     }
+
+    public function runTool(Request $request, Website $website): RedirectResponse
+{
+    if (PHP_OS_FAMILY !== 'Linux') {
+        return back()->with('error', 'Laravel Tools hanya bisa dijalankan di Ubuntu/Linux Server.');
+    }
+
+    $validated = $request->validate([
+        'tool' => ['required', 'string'],
+    ]);
+
+    $projectPath = dirname($website->root_path);
+
+    if (! is_dir($projectPath)) {
+        return back()->with('error', 'Project folder tidak ditemukan: ' . $projectPath);
+    }
+
+    $commands = [
+        'optimize' => 'php artisan optimize',
+        'optimize_clear' => 'php artisan optimize:clear',
+        'migrate' => 'php artisan migrate --force',
+        'storage_link' => 'php artisan storage:link',
+        'composer_install' => 'composer install --no-dev --optimize-autoloader',
+        'npm_build' => 'npm install && npm run build',
+    ];
+
+    if (! array_key_exists($validated['tool'], $commands)) {
+        return back()->with('error', 'Tool tidak valid.');
+    }
+
+    $command = "cd {$projectPath} && " . $commands[$validated['tool']];
+
+    $process = Process::fromShellCommandline($command);
+    $process->setTimeout(600);
+    $process->run();
+
+    $output = trim($process->getOutput() . "\n" . $process->getErrorOutput());
+
+    activity()
+        ->causedBy(auth()->user())
+        ->performedOn($website)
+        ->withProperties([
+            'tool' => $validated['tool'],
+            'command' => $command,
+            'output' => $output,
+        ])
+        ->log('Laravel tool dijalankan');
+
+    if (! $process->isSuccessful()) {
+        return back()->with('error', $output ?: 'Command gagal dijalankan.');
+    }
+
+    return back()->with('success', $output ?: 'Command berhasil dijalankan.');
+}
+
+public function analytics(Website $website)
+{
+    $projectPath = dirname($website->root_path);
+
+    $data = [
+        'project_path' => $projectPath,
+        'root_path' => $website->root_path,
+        'project_exists' => is_dir($projectPath),
+        'public_exists' => is_dir($website->root_path),
+        'env_exists' => file_exists($projectPath . '/.env'),
+        'artisan_exists' => file_exists($projectPath . '/artisan'),
+        'disk_usage' => PHP_OS_FAMILY === 'Linux' && is_dir($projectPath)
+            ? trim(shell_exec('du -sh ' . escapeshellarg($projectPath) . ' 2>/dev/null') ?: '-')
+            : '-',
+        'file_count' => PHP_OS_FAMILY === 'Linux' && is_dir($projectPath)
+            ? trim(shell_exec('find ' . escapeshellarg($projectPath) . ' -type f | wc -l') ?: '0')
+            : '0',
+        'last_modified' => is_dir($projectPath)
+            ? date('Y-m-d H:i:s', filemtime($projectPath))
+            : '-',
+    ];
+
+    return view('admin.websites.analytics', compact('website', 'data'));
+}
 }

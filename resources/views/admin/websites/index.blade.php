@@ -148,6 +148,22 @@
                                 Hapus
                             </button>
                         </form>
+                        <form method="POST" action="{{ route('admin.websites.tools.run', $website) }}">
+                            @csrf
+                            <input type="hidden" name="tool" value="optimize_clear">
+                            <button class="px-4 py-2 rounded-2xl bg-violet-600 hover:bg-violet-700 text-sm">
+                                Clear Cache
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{{ route('admin.websites.tools.run', $website) }}">
+                            @csrf
+                            <input type="hidden" name="tool" value="migrate">
+                            <button onclick="return confirm('Jalankan migration untuk {{ $website->name }}?')"
+                                class="px-4 py-2 rounded-2xl bg-green-600 hover:bg-green-700 text-sm">
+                                Migrate
+                            </button>
+                        </form>
                     </div>
                 </div>
             @empty
