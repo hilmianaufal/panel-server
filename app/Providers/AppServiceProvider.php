@@ -17,8 +17,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (Schema::hasTable('settings')) {
-            $setting = DB::table('settings')->first();
-            View::share('setting', $setting);
+            View::share('setting', DB::table('settings')->first());
         } else {
             View::share('setting', null);
         }
