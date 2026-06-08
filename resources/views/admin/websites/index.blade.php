@@ -165,6 +165,10 @@
                             </button>
                         </form>
                     </div>
+                                <a href="{{ route('admin.websites.analytics', $website) }}"
+                                class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm">
+                                    Analytics
+                                </a>
                 </div>
             @empty
                 <div class="text-center py-16 text-slate-400">
