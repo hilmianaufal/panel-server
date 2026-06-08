@@ -93,61 +93,51 @@
 
         <div class="space-y-4">
             @forelse ($websites as $website)
-                <div class="p-5 rounded-3xl bg-slate-950/60 border border-white/10 flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="h-12 w-12 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
+            <div class="p-5 rounded-3xl bg-slate-950/60 border border-white/10">
+                <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="h-12 w-12 shrink-0 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
                             <i data-lucide="panel-top" class="w-6 h-6"></i>
                         </div>
 
-                        <div>
-                            <h4 class="font-bold text-lg">{{ $website->name }}</h4>
-                            <p class="text-sm text-slate-400">{{ $website->domain }}</p>
-                            <p class="text-xs text-slate-500 mt-1">{{ $website->root_path }}</p>
+                        <div class="min-w-0">
+                            <h4 class="font-bold text-lg truncate">{{ $website->name }}</h4>
+                            <p class="text-sm text-slate-400 truncate">{{ $website->domain }}</p>
+                            <p class="text-xs text-slate-500 mt-1 break-all">{{ $website->root_path }}</p>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-3">
-                        <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-sm">
+                    <div class="flex flex-wrap items-center gap-2 xl:justify-end">
+                        <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-xs">
                             {{ ucfirst($website->status) }}
                         </span>
-                            @if ($website->auto_tunnel)
-                                @if ($website->tunnel_status === 'active')
-                                    <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs">
-                                        Tunnel Active
-                                    </span>
-                                @elseif ($website->tunnel_status === 'failed')
-                                    <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs">
-                                        Tunnel Failed
-                                    </span>
-                                @else
-                                    <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-xs">
-                                        Tunnel Pending
-                                    </span>
-                                @endif
+
+                        @if ($website->auto_tunnel)
+                            @if ($website->tunnel_status === 'active')
+                                <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 text-xs">Tunnel Active</span>
+                            @elseif ($website->tunnel_status === 'failed')
+                                <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs">Tunnel Failed</span>
+                            @else
+                                <span class="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-400 text-xs">Tunnel Pending</span>
                             @endif
-                                                    <a href="http://{{ $website->domain }}" target="_blank"
-                           class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm">
+                        @endif
+
+                        <a href="http://{{ $website->domain }}" target="_blank"
+                            class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm">
                             Open
                         </a>
 
                         <a href="{{ route('admin.websites.edit', $website) }}"
-                            class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm flex items-center gap-2">
-                                <i data-lucide="pencil" class="w-4 h-4"></i>
-                                Edit
-                            </a>
+                            class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm">
+                            Edit
+                        </a>
 
-                            <a href="{{ route('admin.websites.nginx-config', $website) }}"
+                        <a href="{{ route('admin.websites.nginx-config', $website) }}"
                             class="px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-sm">
-                                Config
-                            </a>
-                        <form method="POST" action="{{ route('admin.websites.destroy', $website) }}">
-                            @csrf
-                            @method('DELETE')
-                            <button onclick="return confirm('Hapus website ini dari panel?')"
-                                class="px-4 py-2 rounded-2xl bg-red-600/80 hover:bg-red-600 text-sm">
-                                Hapus
-                            </button>
-                        </form>
+                            Config
+                        </a>
+
                         <form method="POST" action="{{ route('admin.websites.tools.run', $website) }}">
                             @csrf
                             <input type="hidden" name="tool" value="optimize_clear">
@@ -164,12 +154,24 @@
                                 Migrate
                             </button>
                         </form>
+
+                        <a href="{{ route('admin.websites.analytics', $website) }}"
+                            class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm">
+                            Analytics
+                        </a>
+
+                        <form method="POST" action="{{ route('admin.websites.destroy', $website) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button onclick="return confirm('Hapus website ini dari panel?')"
+                                class="px-4 py-2 rounded-2xl bg-red-600/80 hover:bg-red-600 text-sm">
+                                Hapus
+                            </button>
+                        </form>
                     </div>
-                                <a href="{{ route('admin.websites.analytics', $website) }}"
-                                class="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 text-sm">
-                                    Analytics
-                                </a>
+
                 </div>
+            </div>
             @empty
                 <div class="text-center py-16 text-slate-400">
                     <i data-lucide="folder-open" class="w-12 h-12 mx-auto mb-4"></i>
