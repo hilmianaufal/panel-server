@@ -138,12 +138,11 @@ public function deploy(DeployProject $project): RedirectResponse
 
     $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php -r \"file_put_contents('.env', preg_replace('/^APP_KEY=.*/m', 'APP_KEY=base64:'.base64_encode(random_bytes(32)), file_get_contents('.env')));\"";
 
-    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan package:discover --ansi";
-
     if ($project->auto_database) {
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan migrate --force";
     }
 
+    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan package:discover --ansi";
     $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan optimize";
 
     $commands[] = "sudo chmod -R 775 {$safeProjectPath}/storage {$safeProjectPath}/bootstrap/cache";
