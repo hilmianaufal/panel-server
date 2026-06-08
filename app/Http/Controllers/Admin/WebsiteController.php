@@ -274,56 +274,120 @@ NGINX;
     }
 
     private function createCloudflareHostname(Website $website): true|string
-    {
-        $setting = CloudflareSetting::first();
+{
+    $setting = CloudflareSetting::first();
 
-        if (! $setting) {
-            return 'Cloudflare Tunnel belum dikonfigurasi.';
-        }
-
-        $url = "https://api.cloudflare.com/client/v4/accounts/{$setting->account_id}/cfd_tunnel/{$setting->tunnel_id}/configurations";
-
-        $response = Http::withToken($setting->api_token)
-            ->acceptJson()
-            ->get($url);
-
-        if (! $response->successful()) {
-            return 'Gagal mengambil konfigurasi tunnel: ' . $response->body();
-        }
-
-        $config = data_get($response->json(), 'result.config', []);
-        $ingress = $config['ingress'] ?? [];
-
-        $ingress = collect($ingress)
-            ->reject(fn ($rule) => ! isset($rule['hostname']))
-            ->reject(fn ($rule) => ($rule['hostname'] ?? null) === $website->domain)
-            ->values()
-            ->toArray();
-
-        $ingress[] = [
-            'hostname' => $website->domain,
-            'service' => 'http://localhost:80',
-        ];
-
-        $ingress[] = [
-            'service' => 'http_status:404',
-        ];
-
-        $update = Http::withToken($setting->api_token)
-            ->acceptJson()
-            ->put($url, [
-                'config' => [
-                    'ingress' => $ingress,
-                ],
-            ]);
-
-        if (! $update->successful()) {
-            return 'Gagal update Cloudflare Tunnel: ' . $update->body();
-        }
-
-        return true;
+    if (! $setting) {
+        return 'Cloudflare Tunnel belum dikonfigurasi.';
     }
 
+    if (! $setting->zone_id) {
+        return 'Zone ID Cloudflare belum diisi.';
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | 1. Update Cloudflare Tunnel Ingress
+    |--------------------------------------------------------------------------
+    */
+    $url = "https://api.cloudflare.com/client/v4/accounts/{$setting->account_id}/cfd_tunnel/{$setting->tunnel_id}/configurations";
+
+    $response = Http::withToken($setting->api_token)
+        ->acceptJson()
+        ->get($url);
+
+    if (! $response->successful()) {
+        return 'Gagal mengambil konfigurasi tunnel: ' . $response->body();
+    }
+
+    $config = data_get($response->json(), 'result.config', []);
+    $ingress = $config['ingress'] ?? [];
+
+    $ingress = collect($ingress)
+        ->reject(fn ($rule) => ! isset($rule['hostname']))
+        ->reject(fn ($rule) => ($rule['hostname'] ?? null) === $website->domain)
+        ->values()
+        ->toArray();
+
+    $ingress[] = [
+        'hostname' => $website->domain,
+        'service' => 'http://localhost:80',
+    ];
+
+    $ingress[] = [
+        'service' => 'http_status:404',
+    ];
+
+    $update = Http::withToken($setting->api_token)
+        ->acceptJson()
+        ->put($url, [
+            'config' => [
+                'ingress' => $ingress,
+            ],
+        ]);
+
+    if (! $update->successful()) {
+        return 'Gagal update Cloudflare Tunnel: ' . $update->body();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | 2. Create / Update DNS Record Cloudflare
+    |--------------------------------------------------------------------------
+    */
+    $dnsName = $website->domain;
+    $dnsTarget = "{$setting->tunnel_id}.cfargotunnel.com";
+
+    $searchDns = Http::withToken($setting->api_token)
+        ->acceptJson()
+        ->get(
+            "https://api.cloudflare.com/client/v4/zones/{$setting->zone_id}/dns_records",
+            [
+                'type' => 'CNAME',
+                'name' => $dnsName,
+            ]
+        );
+
+    if (! $searchDns->successful()) {
+        return 'Gagal cek DNS Record: ' . $searchDns->body();
+    }
+
+    $existingDnsId = data_get($searchDns->json(), 'result.0.id');
+
+    $payload = [
+        'type' => 'CNAME',
+        'name' => $dnsName,
+        'content' => $dnsTarget,
+        'ttl' => 1,
+        'proxied' => true,
+    ];
+
+    if ($existingDnsId) {
+        $dnsUpdate = Http::withToken($setting->api_token)
+            ->acceptJson()
+            ->put(
+                "https://api.cloudflare.com/client/v4/zones/{$setting->zone_id}/dns_records/{$existingDnsId}",
+                $payload
+            );
+
+        if (! $dnsUpdate->successful()) {
+            return 'Gagal update DNS Record: ' . $dnsUpdate->body();
+        }
+    } else {
+        $dnsCreate = Http::withToken($setting->api_token)
+            ->acceptJson()
+            ->post(
+                "https://api.cloudflare.com/client/v4/zones/{$setting->zone_id}/dns_records",
+                $payload
+            );
+
+        if (! $dnsCreate->successful()) {
+            return 'Gagal membuat DNS Record: ' . $dnsCreate->body();
+        }
+    }
+
+    return true;
+}
     public function runTool(Request $request, Website $website): RedirectResponse
 {
     if (PHP_OS_FAMILY !== 'Linux') {
