@@ -65,7 +65,7 @@ class DeployController extends Controller
         return back()->with('success', 'Project deploy berhasil dihapus.');
     }
 
-    public function deploy(DeployProject $project): RedirectResponse
+public function deploy(DeployProject $project): RedirectResponse
 {
     if (PHP_OS_FAMILY !== 'Linux') {
         return back()->with('error', 'Deploy hanya bisa dijalankan di Ubuntu/Linux Server.');
@@ -96,10 +96,8 @@ class DeployController extends Controller
     $commands[] = "sudo find {$safeProjectPath} -type d -exec chmod 775 {} \\;";
     $commands[] = "sudo find {$safeProjectPath} -type f -exec chmod 664 {} \\;";
 
-    // Install dependency tanpa menjalankan script Laravel dulu
     $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} composer install --no-dev --optimize-autoloader --no-scripts";
 
-    // Buat .env kalau belum ada
     if (! file_exists($projectPath . '/.env')) {
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} cp .env.example .env";
     }
@@ -129,12 +127,14 @@ class DeployController extends Controller
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_DATABASE=.*/DB_DATABASE={$dbName}/' .env";
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_USERNAME=.*/DB_USERNAME={$dbUser}/' .env";
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD={$dbPass}/' .env";
+
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} grep -q '^DB_DATABASE=' .env || echo 'DB_DATABASE={$dbName}' >> .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} grep -q '^DB_USERNAME=' .env || echo 'DB_USERNAME={$dbUser}' >> .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} grep -q '^DB_PASSWORD=' .env || echo 'DB_PASSWORD={$dbPass}' >> .env";
     }
 
-    // APP_KEY setelah .env ada
-    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan key:generate --force";
+    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php -r \"file_put_contents('.env', preg_replace('/^APP_KEY=.*/m', 'APP_KEY=base64:'.base64_encode(random_bytes(32)), file_get_contents('.env')));\"";
 
-    // Baru jalankan package discover
     $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan package:discover --ansi";
 
     if ($project->auto_database) {
