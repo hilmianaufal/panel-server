@@ -59,7 +59,10 @@
 
             <input name="project_path" value="{{ old('project_path') }}" placeholder="/var/www/project"
                 class="w-full rounded-2xl bg-slate-950/70 border border-white/10 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500">
-
+                <label class="flex items-center gap-3">
+                    <input type="checkbox" name="auto_database" value="1">
+                    <span>Auto Create Database</span>
+                </label>
             <button class="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 px-4 py-3 font-semibold flex items-center justify-center gap-2">
                 <i data-lucide="plus-circle" class="w-5 h-5"></i>
                 Tambah Project
