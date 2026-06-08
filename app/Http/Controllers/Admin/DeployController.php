@@ -96,8 +96,10 @@ class DeployController extends Controller
     $commands[] = "sudo find {$safeProjectPath} -type d -exec chmod 775 {} \\;";
     $commands[] = "sudo find {$safeProjectPath} -type f -exec chmod 664 {} \\;";
 
-    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} composer install --no-dev --optimize-autoloader";
+    // Install dependency tanpa menjalankan script Laravel dulu
+    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} composer install --no-dev --optimize-autoloader --no-scripts";
 
+    // Buat .env kalau belum ada
     if (! file_exists($projectPath . '/.env')) {
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} cp .env.example .env";
     }
@@ -129,7 +131,11 @@ class DeployController extends Controller
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD={$dbPass}/' .env";
     }
 
+    // APP_KEY setelah .env ada
     $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan key:generate --force";
+
+    // Baru jalankan package discover
+    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan package:discover --ansi";
 
     if ($project->auto_database) {
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan migrate --force";
