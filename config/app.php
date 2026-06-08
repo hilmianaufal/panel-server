@@ -15,7 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
-    'mysql_admin_user' => env('MYSQL_ADMIN_USER', 'hilmidev'),
+    'mysql_admin_user' => env('MYSQL_ADMIN_USER', 'hilmi'),
     'mysql_admin_password' => env('MYSQL_ADMIN_PASSWORD'),
     'deploy_user' => env('DEPLOY_USER', 'hilmidev'),
 

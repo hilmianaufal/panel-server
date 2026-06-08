@@ -74,7 +74,7 @@ class DeployController extends Controller
     $projectPath = rtrim($project->project_path, '/');
     $parentPath = dirname($projectPath);
 
-    $deployUser = env('DEPLOY_USER', 'hilmidev');
+    $deployUser = config('app.deploy_user', 'hilmidev');
 
     $safeProjectPath = escapeshellarg($projectPath);
     $safeParentPath = escapeshellarg($parentPath);
@@ -86,20 +86,20 @@ class DeployController extends Controller
     if (! is_dir($projectPath)) {
         $commands[] = "sudo mkdir -p {$safeParentPath}";
         $commands[] = "sudo chown -R {$deployUser}:www-data {$safeParentPath}";
-        $commands[] = "git clone -b {$safeBranch} {$safeRepository} {$safeProjectPath}";
+        $commands[] = "sudo -u {$deployUser} git clone -b {$safeBranch} {$safeRepository} {$safeProjectPath}";
     } else {
-        $commands[] = "cd {$safeProjectPath} && git config --global --add safe.directory {$safeProjectPath}";
-        $commands[] = "cd {$safeProjectPath} && git pull origin {$safeBranch}";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} git config --global --add safe.directory {$safeProjectPath}";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} git pull origin {$safeBranch}";
     }
 
     $commands[] = "sudo chown -R {$deployUser}:www-data {$safeProjectPath}";
     $commands[] = "sudo find {$safeProjectPath} -type d -exec chmod 775 {} \\;";
     $commands[] = "sudo find {$safeProjectPath} -type f -exec chmod 664 {} \\;";
 
-    $commands[] = "cd {$safeProjectPath} && composer install --no-dev --optimize-autoloader";
+    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} composer install --no-dev --optimize-autoloader";
 
     if (! file_exists($projectPath . '/.env')) {
-        $commands[] = "cd {$safeProjectPath} && cp .env.example .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} cp .env.example .env";
     }
 
     if ($project->auto_database) {
@@ -107,7 +107,7 @@ class DeployController extends Controller
         $dbUser = preg_replace('/[^a-zA-Z0-9_]/', '', $project->db_username);
         $dbPass = str_replace("'", "\\'", $project->db_password);
 
-        $mysqlUser = config('app.mysql_admin_user', 'hilmidev');
+        $mysqlUser = config('app.mysql_admin_user', 'hilmi');
         $mysqlPass = config('app.mysql_admin_password');
 
         $mysqlLogin = "-u " . escapeshellarg($mysqlUser);
@@ -121,21 +121,21 @@ class DeployController extends Controller
         $commands[] = "mysql {$mysqlLogin} -e \"GRANT ALL PRIVILEGES ON {$dbName}.* TO '{$dbUser}'@'localhost'\"";
         $commands[] = "mysql {$mysqlLogin} -e \"FLUSH PRIVILEGES\"";
 
-        $commands[] = "cd {$safeProjectPath} && sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env";
-        $commands[] = "cd {$safeProjectPath} && sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env";
-        $commands[] = "cd {$safeProjectPath} && sed -i 's/^DB_PORT=.*/DB_PORT=3306/' .env";
-        $commands[] = "cd {$safeProjectPath} && sed -i 's/^DB_DATABASE=.*/DB_DATABASE={$dbName}/' .env";
-        $commands[] = "cd {$safeProjectPath} && sed -i 's/^DB_USERNAME=.*/DB_USERNAME={$dbUser}/' .env";
-        $commands[] = "cd {$safeProjectPath} && sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD={$dbPass}/' .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_PORT=.*/DB_PORT=3306/' .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_DATABASE=.*/DB_DATABASE={$dbName}/' .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_USERNAME=.*/DB_USERNAME={$dbUser}/' .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD={$dbPass}/' .env";
     }
 
-    $commands[] = "cd {$safeProjectPath} && php artisan key:generate --force";
+    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan key:generate --force";
 
     if ($project->auto_database) {
-        $commands[] = "cd {$safeProjectPath} && php artisan migrate --force";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan migrate --force";
     }
 
-    $commands[] = "cd {$safeProjectPath} && php artisan optimize";
+    $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php artisan optimize";
 
     $commands[] = "sudo chmod -R 775 {$safeProjectPath}/storage {$safeProjectPath}/bootstrap/cache";
     $commands[] = "sudo chown -R {$deployUser}:www-data {$safeProjectPath}";
