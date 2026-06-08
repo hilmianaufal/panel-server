@@ -107,8 +107,8 @@ class DeployController extends Controller
         $dbUser = preg_replace('/[^a-zA-Z0-9_]/', '', $project->db_username);
         $dbPass = str_replace("'", "\\'", $project->db_password);
 
-        $mysqlUser = config('database.connections.mysql.username');
-        $mysqlPass = config('database.connections.mysql.password');
+        $mysqlUser = config('app.mysql_admin_user', 'hilmidev');
+        $mysqlPass = config('app.mysql_admin_password');
 
         $mysqlLogin = "-u " . escapeshellarg($mysqlUser);
 
