@@ -128,9 +128,12 @@ public function deploy(DeployProject $project): RedirectResponse
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_USERNAME=.*/DB_USERNAME={$dbUser}/' .env";
         $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD={$dbPass}/' .env";
 
-        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} grep -q '^DB_DATABASE=' .env || echo 'DB_DATABASE={$dbName}' >> .env";
-        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} grep -q '^DB_USERNAME=' .env || echo 'DB_USERNAME={$dbUser}' >> .env";
-        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} grep -q '^DB_PASSWORD=' .env || echo 'DB_PASSWORD={$dbPass}' >> .env";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sh -c \"grep -q '^DB_CONNECTION=' .env || echo 'DB_CONNECTION=mysql' >> .env\"";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sh -c \"grep -q '^DB_HOST=' .env || echo 'DB_HOST=127.0.0.1' >> .env\"";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sh -c \"grep -q '^DB_PORT=' .env || echo 'DB_PORT=3306' >> .env\"";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sh -c \"grep -q '^DB_DATABASE=' .env || echo 'DB_DATABASE={$dbName}' >> .env\"";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sh -c \"grep -q '^DB_USERNAME=' .env || echo 'DB_USERNAME={$dbUser}' >> .env\"";
+        $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} sh -c \"grep -q '^DB_PASSWORD=' .env || echo 'DB_PASSWORD={$dbPass}' >> .env\"";
     }
 
     $commands[] = "cd {$safeProjectPath} && sudo -u {$deployUser} php -r \"file_put_contents('.env', preg_replace('/^APP_KEY=.*/m', 'APP_KEY=base64:'.base64_encode(random_bytes(32)), file_get_contents('.env')));\"";
