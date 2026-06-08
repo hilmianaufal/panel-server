@@ -52,62 +52,71 @@ class DeployController extends Controller
         return back()->with('success', 'Project deploy berhasil dihapus.');
     }
 
-    public function deploy(DeployProject $project): RedirectResponse
-    {
-        if (PHP_OS_FAMILY !== 'Linux') {
-            return back()->with('error', 'Deploy hanya bisa dijalankan di Ubuntu/Linux Server.');
-        }
-
-        $projectPath = rtrim($project->project_path, '/');
-        $parentPath = dirname($projectPath);
-
-        $commands = [];
-
-        if (! is_dir($projectPath)) {
-            $commands[] = "sudo mkdir -p {$parentPath}";
-            $commands[] = "sudo chown -R hilmidev:www-data {$parentPath}";
-            $commands[] = "git clone {$project->repository} {$projectPath}";
-        } else {
-            $commands[] = "cd {$projectPath} && git pull origin {$project->branch}";
-        }
-
-        $commands[] = "sudo chown -R hilmidev:www-data {$projectPath}";
-        $commands[] = "sudo chmod -R 775 {$projectPath}";
-        $commands[] = "cd {$projectPath} && composer install --no-dev --optimize-autoloader";
-        $commands[] = "cd {$projectPath} && php artisan migrate --force";
-        $commands[] = "cd {$projectPath} && php artisan optimize";
-
-        $logs = [];
-
-        foreach ($commands as $command) {
-            $process = Process::fromShellCommandline($command);
-            $process->setTimeout(300);
-            $process->run();
-
-            $logs[] = '$ ' . $command;
-            $logs[] = $process->getOutput();
-            $logs[] = $process->getErrorOutput();
-
-            if (! $process->isSuccessful()) {
-                return back()->with('error', implode("\n", $logs));
-            }
-        }
-
-        $project->update([
-            'last_deployed_at' => now(),
-        ]);
-
-        activity()
-            ->causedBy(auth()->user())
-            ->performedOn($project)
-            ->withProperties([
-                'project' => $project->name,
-                'repository' => $project->repository,
-                'branch' => $project->branch,
-                'path' => $projectPath,
-            ])
-            ->log('Project dideploy');
-
-        return back()->with('success', "Deploy berhasil.\n\n" . implode("\n", $logs));
+   public function deploy(DeployProject $project): RedirectResponse
+{
+    if (PHP_OS_FAMILY !== 'Linux') {
+        return back()->with('error', 'Deploy hanya bisa dijalankan di Ubuntu/Linux Server.');
     }
+
+    $projectPath = rtrim($project->project_path, '/');
+    $parentPath = dirname($projectPath);
+
+    $deployUser = env('DEPLOY_USER', 'www-data');
+
+    $safeProjectPath = escapeshellarg($projectPath);
+    $safeParentPath = escapeshellarg($parentPath);
+    $safeRepository = escapeshellarg($project->repository);
+    $safeBranch = escapeshellarg($project->branch);
+
+    $commands = [];
+
+    if (! is_dir($projectPath)) {
+        $commands[] = "sudo mkdir -p {$safeParentPath}";
+        $commands[] = "sudo chown -R {$deployUser}:www-data {$safeParentPath}";
+        $commands[] = "git clone -b {$safeBranch} {$safeRepository} {$safeProjectPath}";
+    } else {
+        $commands[] = "cd {$safeProjectPath} && git config --global --add safe.directory {$safeProjectPath}";
+        $commands[] = "cd {$safeProjectPath} && git pull origin {$safeBranch}";
+    }
+
+    $commands[] = "sudo chown -R {$deployUser}:www-data {$safeProjectPath}";
+    $commands[] = "sudo find {$safeProjectPath} -type d -exec chmod 775 {} \\;";
+    $commands[] = "sudo find {$safeProjectPath} -type f -exec chmod 664 {} \\;";
+    $commands[] = "cd {$safeProjectPath} && composer install --no-dev --optimize-autoloader";
+    $commands[] = "cd {$safeProjectPath} && php artisan migrate --force";
+    $commands[] = "cd {$safeProjectPath} && php artisan optimize";
+
+    $logs = [];
+
+    foreach ($commands as $command) {
+        $process = Process::fromShellCommandline($command);
+        $process->setTimeout(600);
+        $process->run();
+
+        $logs[] = '$ ' . $command;
+        $logs[] = $process->getOutput();
+        $logs[] = $process->getErrorOutput();
+
+        if (! $process->isSuccessful()) {
+            return back()->with('error', implode("\n", $logs));
+        }
+    }
+
+    $project->update([
+        'last_deployed_at' => now(),
+    ]);
+
+    activity()
+        ->causedBy(auth()->user())
+        ->performedOn($project)
+        ->withProperties([
+            'project' => $project->name,
+            'repository' => $project->repository,
+            'branch' => $project->branch,
+            'path' => $projectPath,
+        ])
+        ->log('Project dideploy');
+
+    return back()->with('success', "Deploy berhasil.\n\n" . implode("\n", $logs));
+}
 }
